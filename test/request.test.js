@@ -275,3 +275,22 @@ test('should emit restifyDone event when request is fully served with error', fu
         clientDone = true;
     });
 });
+
+test('should not crash on malformed urls', function(t) {
+    SERVER.get('/:param', function(req, res, next) {
+        const url = req.getUrl().pathname;
+        // TODO: should we have 404ed and not called this handler?
+        t.equal(url, '/..;/%E3%27%22bmt%3D1%3Cbmt%3E');
+        return next();
+    });
+
+    CLIENT.get({ path: '/..;/%E3%27%22bmt%3D1%3Cbmt%3E?page=1' }, function(
+        err,
+        _,
+        res
+    ) {
+        t.ok(err);
+        t.equal(res.statusCode, 404);
+        t.end();
+    });
+});
